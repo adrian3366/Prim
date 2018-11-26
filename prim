@@ -1,0 +1,236 @@
+package prim2;
+import java.io.File;
+import javax.swing.JOptionPane;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.util.Scanner;
+
+public class Prim2 {
+    public static int O[][];    //tablica odcinkow
+    public static int il_punk=9; //ilosc punktow
+    public static int Om[][];  //odcinki w macierzy
+    public static int start=5;  //punkt startowy
+    public static int sasiedzi[][];  //tablica robocza sąsiedzi
+    public static int nr=0; //liczba sąsiadów
+    public static int lista_koncowa[];  //lista koncowa odcinkow
+    public static int l_nr=0;   //biezaca ilosc punktow w tablicy lista_koncowa
+    public static int koncowe_odcinki[][];  //tablica robocza sąsiedzi
+    public static int suma_wag=0;
+    public static int odczyt_liczba = 0;
+    public static int lista[];
+    
+    public static void tworzenie_odcinkow(){
+         String zdanie = "{1,2,13} ";
+        O= new int[][]{   //{punkt, punkt, waga}
+                                     {1,2,13} 
+                                    ,{1,3,5}
+                                    ,{1,4,2}
+                                    ,{2,4,6}
+                                    ,{2,5,8}
+                                    ,{3,4,1}
+                                    ,{3,5,3}
+                                    ,{3,7,1}
+                                    ,{5,7,4}
+                                    ,{5,9,1}
+                                    ,{7,6,3}
+                                    ,{7,8,2}
+                                    ,{6,8,5}
+                                    ,{6,9,1}
+                                    ,{7,6,3}
+                                    ,{8,9,10}
+                                    };
+    }
+    public static void tworzenie_odcinkow2(){
+        System.out.println("nn " + odczyt_liczba);
+        O= new int[odczyt_liczba/3][3];//odczyt_liczba%3
+        int nn=0;
+        for (int i = 0; i < odczyt_liczba; i++) {
+            O[nn][i%3]=
+                    lista[i];
+            if(i%3==2)
+                nn++;
+        }
+        String tekst = "Podaj liczbe punktow: ";
+        il_punk =Integer.parseInt(JOptionPane.showInputDialog(tekst ,  il_punk));
+    }
+    
+    public static void wypisanie_punktów_m(int t[][]){   //bez 0 - wego wymiaru
+         for (int i = 1; i < t.length; i++) {
+             System.out.print("\n"+i+ ":");
+             for (int j = 1; j < t[i].length; j++) 
+                 System.out.print("\t" + t[i][j]);
+        }
+    }
+    
+    public static void wypisanie_punktów(int t[][]){
+         for (int i = 0; i < t.length; i++) {
+             for (int j = 0; j < t[i].length; j++) 
+                 System.out.print(" " + t[i][j]);
+             System.out.println("");
+        }
+    }
+    
+    public static void twożenie_maciezy(){
+        Om=new int[il_punk+1][il_punk+1];   //zaczynamy od 1 a nie 0
+        for (int i = 0; i < O.length;i++){
+            int a = O[i][0];
+            int b = O[i][1];
+            Om[a][b]=O[i][2];
+            Om[b][a]=O[i][2];
+        }
+         for (int i = 0; i < Om.length;i++) // nie polaczone punkty == 100
+            for (int j = 0; j <Om.length; j++)
+                if(Om[i][j]==0)
+                    Om[i][j]=Om[i][j]+999;
+    }
+    
+     public static int wybierz_poczatek(int pkt){
+        String tekst = "Podaj punkt poczatkowy 1 - " + il_punk + ":";
+        pkt =Integer.parseInt(JOptionPane.showInputDialog(tekst ,  pkt));
+        System.out.println("Punkt poczatkowy - " + pkt);
+        lista_koncowa[ l_nr++]=pkt;
+        return pkt;
+    }
+     
+     public static void dodaj_sasiadow(int pkt){
+        for (int i = 0; i < Om.length; i++) 
+            if(Om[pkt][i]!=999){
+                sasiedzi[nr][0]=pkt;
+                sasiedzi[nr++][1]=i;
+            }
+    }
+     
+     public static void zamiana(int i, int j){
+        int a = sasiedzi[i][0];
+        int b = sasiedzi[i][1];
+        sasiedzi[i][0]=sasiedzi[j][0];
+        sasiedzi[i][1]=sasiedzi[j][1];
+        sasiedzi[j][0]=a;
+        sasiedzi[j][1]=b;
+    }
+     
+    public static void sortoj_sasiadow(){
+        for (int i = nr; i >0; i--)
+            if(Om[sasiedzi[i][0]][sasiedzi[i][1]]<Om[sasiedzi[i-1][0]][sasiedzi[i-1][1]]){
+                zamiana(i,i-1);
+                System.out.println("zamiana" + i + " " + (i-1));
+            }
+    }
+    
+    public static void usun_zbedne(){
+        for (int j = 0; j < l_nr; j++) 
+            for (int i = 0; i < nr;i++)
+                if(lista_koncowa[j]==sasiedzi[i][1]){
+                    zamiana(i,nr-1);
+                    System.out.println("usunieto " + sasiedzi[nr-1][0]+ sasiedzi[nr-1][1]);
+                    sasiedzi[nr-1][1]=0;
+                    sasiedzi[nr-1][0]=0;
+                    nr--;
+                }
+    }
+    public static void kopioj_do_tablicy(){
+        koncowe_odcinki[l_nr-2][0]=sasiedzi[0][0];
+        koncowe_odcinki[l_nr-2][1]=sasiedzi[0][1];
+        suma_wag+=Om[sasiedzi[0][0]][sasiedzi[0][1]];
+        System.out.println("koncowe odcinki: " + koncowe_odcinki[l_nr-2][0] + " " + koncowe_odcinki[l_nr-2][1]);
+    }
+     public static void zapis() throws FileNotFoundException {
+         PrintWriter zapis = new PrintWriter("prim_wynik.txt");
+      zapis.println("Lista kolejno dodanych wierzcholkow" );
+      for (int i = 0; i <  l_nr; i++)
+            zapis.print(lista_koncowa[i] + " ");
+      zapis.println("\nKoncowe odcinki:");
+      for (int i = 0; i < koncowe_odcinki.length; i++) {
+             for (int j = 0; j < koncowe_odcinki[i].length; j++) 
+                 zapis.print(" " + koncowe_odcinki[i][j]);
+             zapis.println("");
+        }
+      zapis.println("suma wag wynosi: " + suma_wag);
+      zapis.close();
+     }
+      public static boolean isInteger(String s){
+        try{
+            Integer.parseInt(s);
+        } catch(NumberFormatException e) {
+            return false;
+        } catch(NullPointerException e) {
+            return false;
+        }
+        return true;
+    }
+     public static void odczyt() throws FileNotFoundException{
+         File file = new File("wejscie.txt");
+      Scanner in = new Scanner(file);
+ 
+      //String zdanie = in.nextLine();
+      lista=new int [100];
+      int i=0;
+      while(true){
+      //for (int i = 0; i < 100; i++) {
+          String zmienna = in.nextLine();
+          if(isInteger(zmienna) == false){
+              break;
+          }
+          lista[i] =  Integer.parseInt(zmienna);
+          System.out.print(" " + lista[i]);
+               if(i%3==2)
+              System.out.println("");
+          i++;
+          if(i%3==0&&i!=0){
+          zmienna = in.nextLine();
+          }
+      }
+      odczyt_liczba=i;
+     }
+    public static void main(String[] args) throws FileNotFoundException {
+        // zaczolem bez  punktu nr 0
+        lista_koncowa=new int [il_punk];
+        System.out.println("Algorytm prima wykonywany na macierzach");
+        //tworzenie_odcinkow();
+        odczyt();
+        tworzenie_odcinkow2();
+        System.out.println("Poczatkowe odcinki (punkt, punkt, waga).");
+        wypisanie_punktów(O);
+        twożenie_maciezy();
+        System.out.println("Punkty wypisane w macierzy");
+        wypisanie_punktów_m(Om);
+        System.out.println("\n");
+        start=wybierz_poczatek(start);
+        sasiedzi=new int[O.length][2];
+        koncowe_odcinki=new int[il_punk-1][2];
+        
+        dodaj_sasiadow(start);
+        usun_zbedne();
+        sortoj_sasiadow();
+        wypisanie_punktów(sasiedzi);
+        lista_koncowa[ l_nr++]=sasiedzi[0][1];
+        kopioj_do_tablicy();
+        System.out.println("\t\tdodano " + lista_koncowa[ l_nr-1]);
+        zamiana(0,nr-1);
+        nr--;
+        
+        for (int i = l_nr; i < il_punk; i++) {
+        //for (int i = 0; i < 2; i++) {
+        System.out.println("kolejny krok");
+        dodaj_sasiadow(lista_koncowa[ l_nr-1]);
+        usun_zbedne();
+        wypisanie_punktów(sasiedzi);
+        sortoj_sasiadow();
+        wypisanie_punktów(sasiedzi);
+        lista_koncowa[ l_nr++]=sasiedzi[0][1];
+        kopioj_do_tablicy();
+        System.out.println("\t\tdodano " + lista_koncowa[ l_nr-1]);
+        zamiana(0,1);
+        zamiana(1,nr-1);
+        nr--;
+        }
+        
+        System.out.println("lista koncowa");
+        for (int i = 0; i <  l_nr; i++)
+            System.out.print(lista_koncowa[i] + " ");
+        System.out.println("\nKoncowe odcinki:");
+        wypisanie_punktów(koncowe_odcinki);
+        System.out.println("Suma wag wynosi: " + suma_wag + ".");
+        zapis();
+    }
+}
